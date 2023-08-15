@@ -1,4 +1,4 @@
-# **Instalação do Chatwoot + Quepasa + PgAdmin via Docker**
+# **Instalação do Chatwoot + Evolution API + PgAdmin via Docker**
 
 <div align="center">
 <a href="https://github.com/technervs" target="_blank">

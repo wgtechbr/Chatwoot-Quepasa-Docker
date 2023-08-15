@@ -12,7 +12,7 @@ services:
     image: chatwoot/chatwoot:latest
     container_name: chatwoot
     hostname: chatwoot
-    env_file: ./quepasa-chatwoot/.env
+    env_file: ./evolution-chatwoot/.env
     volumes:
       - /data/storage:/app/storage
     restart: always
@@ -22,27 +22,27 @@ services:
       - postgres
       - redis
     networks:
-      - quepasa-network
+      - chatwoot-network
 
-  quepasa:
-    image: quepasa
-    container_name: "quepasa"
+  evolution:
+    image: evolution
+    container_name: "evolution"
     mem_limit: 4096M
     env_file:
-      - ./quepasa-source/helpers/.env
+      - ./evolution-source/helpers/.env
     extra_hosts:
       - "host.docker.internal:host-gateway"
     build:
       context: ./
-      dockerfile: ./quepasa-source/docker/Dockerfile
+      dockerfile: ./evolution-source/docker/Dockerfile
     volumes:
-      - ./quepasa-source/src:/opt/quepasa
+      - ./evolution-source/src:/opt/evolution
     # command: /bin/bash docker-entrypoint.sh
     restart: always
     stdin_open: true
     tty: true
     networks:
-      - quepasa-network
+      - chatwoot-network
 
   rails:
     <<: *base
@@ -57,7 +57,7 @@ services:
       - INSTALLATION_ENV=docker
     restart: always
     networks:
-      - quepasa-network
+      - evolution-network
     entrypoint: docker/entrypoints/rails.sh
     command: >
       sh -c "while ! nc -z postgres 5432; do sleep 1; done;
@@ -77,7 +77,7 @@ services:
       - RAILS_ENV=production
       - INSTALLATION_ENV=docker
     networks:
-      - quepasa-network
+      - evolution-network
     restart: unless-stopped
     command:
       [
@@ -94,13 +94,13 @@ services:
     hostname: chatwoot-postgres
     restart: always
     volumes:
-      - ./quepasa-chatwoot/data/postgres:/var/lib/postgresql/data
+      - ./evolution-chatwoot/data/postgres:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=chatwoot
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=chatwoot
     networks:
-      - quepasa-network
+      - chatwoot-network
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -113,7 +113,7 @@ services:
     depends_on:
       - postgres
     networks:
-      - quepasa-network
+      - chatwoot-network
 
   redis:
     image: redis:alpine
@@ -126,30 +126,30 @@ services:
         "-c",
         "redis-server --requirepass \"$REDIS_PASSWORD\""
       ]
-    env_file: ./quepasa-chatwoot/.env
+    env_file: ./evolution-chatwoot/.env
     volumes:
-      - ./quepasa-chatwoot/data/redis:/data
+      - ./evolution-chatwoot/data/redis:/data
     networks:
-      - quepasa-network
+      - chatwoot-network
 
   nginx:
     build:
-      context: ./quepasa-nginx
+      context: ./evolution-nginx
       dockerfile: Dockerfile
     container_name: nginx
     entrypoint: nginx -g "daemon off;"
     ports:
       - "8080:8080" #chatwoot
-      - "8081:8081" #quepasa
+      - "8081:8081" #evolution
       - "8082:8082" #pgadmin
       - "8083:8083" #redis
     restart: always
     networks:
-      - quepasa-network
+      - chatwoot-network
     depends_on:
-      - quepasa
+      - evolution
 
 networks:
-  quepasa-network:
-    name: quepasa-network
+  chatwoot-network:
+    name: chatwoot-network
     driver: bridge
